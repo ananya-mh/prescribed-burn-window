@@ -18,7 +18,7 @@ from core import config
 from core.areas import AREAS, Area
 from core.thresholds import assess_days, best_of
 from models.schemas import AreaAssessment, BurnAreasResponse, Location
-from services.airnow import fetch_daily_aqi
+from services.aqi import fetch_daily_aqi
 from services.nws import NWSError, fetch_daily_forecast
 
 logger = logging.getLogger(__name__)

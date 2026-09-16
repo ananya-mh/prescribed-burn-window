@@ -22,6 +22,18 @@ class Range(BaseModel):
     max: float
 
 
+class AqiReading(BaseModel):
+    """An AQI number and where it came from.
+
+    "airnow" is the local air district's own forecast, which is what a burn
+    permit is judged against. "modeled" is Open-Meteo's estimate, used where
+    AirNow has no reporting area -- informative, but not a permit decision.
+    """
+
+    value: int
+    source: str
+
+
 class DayConditions(BaseModel):
     """The measured/forecast values for one day. AQI is optional because
     AirNow does not cover every California location or every forecast day."""
@@ -31,6 +43,7 @@ class DayConditions(BaseModel):
     temp_max_f: float
     precip_prob_pct: float
     aqi: Optional[int] = None
+    aqi_source: Optional[str] = None
 
 
 class ParameterAssessment(BaseModel):

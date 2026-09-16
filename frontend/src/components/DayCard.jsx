@@ -1,8 +1,28 @@
 import { useState } from "react";
 import StatusBadge from "./StatusBadge";
+import {
+  AirQualityIcon,
+  ClockIcon,
+  HumidityIcon,
+  PrecipitationIcon,
+  TemperatureIcon,
+  WindIcon,
+} from "./Icons";
 
-// The five parameters, in the order we want to show them, with a label and a
-// function that turns the day's `conditions` into a display value.
+// Keyed by the parameter names the API uses in `thresholds` and
+// `blocking_factors`. "burn_window" is not a weather parameter - it means no
+// run of hours was long enough to mobilise a crew for.
+const PARAMETER_ICONS = {
+  wind: WindIcon,
+  humidity: HumidityIcon,
+  temperature: TemperatureIcon,
+  precipitation: PrecipitationIcon,
+  air_quality: AirQualityIcon,
+  burn_window: ClockIcon,
+};
+
+// The five parameters, in the order we show them, with a label and a function
+// that turns the day's `conditions` into a display value.
 const PARAMETERS = [
   {
     key: "wind",
@@ -31,7 +51,16 @@ const PARAMETERS = [
   },
 ];
 
-// Full literal class strings — see the note in StatusBadge.jsx.
+const FACTOR_LABELS = {
+  wind: "wind",
+  humidity: "humidity",
+  temperature: "temperature",
+  precipitation: "rain",
+  air_quality: "air quality",
+  burn_window: "no long enough window",
+};
+
+// Full literal class strings - see the note in StatusBadge.jsx.
 const ROW_STYLES = {
   ok: "border-slate-200 bg-white text-slate-700",
   marginal: "border-yellow-300 bg-yellow-50 text-yellow-900",
@@ -45,6 +74,15 @@ const CARD_ACCENTS = {
   "NO-GO": "border-t-4 border-t-red-500",
 };
 
+// The burn window is the most actionable thing on the page - it tells a crew
+// when to start and how long they have - so it is tinted by verdict rather
+// than left as body text.
+const WINDOW_STYLES = {
+  "GO": "text-green-700",
+  "MARGINAL": "text-yellow-700",
+  "NO-GO": "text-slate-600",
+};
+
 // "2026-09-15" -> "Tue, Sep 15". Split by hand rather than using `new Date`,
 // which would read the string as UTC midnight and can land on the day before.
 function formatDate(isoDate) {
@@ -56,34 +94,15 @@ function formatDate(isoDate) {
   });
 }
 
-// "burn_window" is not a weather parameter - it means no run of hours was long
-// enough to be worth mobilising a crew for.
-const FACTOR_LABELS = {
-  wind: "wind",
-  humidity: "humidity",
-  temperature: "temperature",
-  precipitation: "rain",
-  air_quality: "air quality",
-};
-
-function summarize(blockingFactors) {
-  if (blockingFactors.length === 0) return "All parameters within range";
-  if (blockingFactors.includes("burn_window")) {
-    return "No long enough window in the forecast";
-  }
-  const names = blockingFactors.map((f) => FACTOR_LABELS[f] || f);
-  return `Blocked by ${names.join(", ")}`;
-}
-
 // 10:00-15:00 across 5 hours. end_hour is exclusive.
 function formatWindow(window) {
   const pad = (h) => String(h).padStart(2, "0");
-  const hours = window.hours === 1 ? "1 hour" : `${window.hours} hours`;
-  return `${pad(window.start_hour)}:00-${pad(window.end_hour)}:00 · ${hours}`;
+  return `${pad(window.start_hour)}:00-${pad(window.end_hour)}:00`;
 }
 
 export default function DayCard({ day }) {
   const [expanded, setExpanded] = useState(false);
+  const blocked = day.blocking_factors.length > 0;
 
   return (
     <div
@@ -104,20 +123,46 @@ export default function DayCard({ day }) {
           <StatusBadge status={day.status} />
         </div>
 
-        <span className="text-sm text-slate-600">
-          {summarize(day.blocking_factors)}
-        </span>
-
+        {/* When you can burn, and for how long. */}
         {day.burn_window ? (
-          <span className="text-sm font-medium text-slate-800">
-            Burn window {formatWindow(day.burn_window)}
+          <span
+            className={`flex items-center gap-1.5 text-lg font-bold ${
+              WINDOW_STYLES[day.status] || "text-slate-800"
+            }`}
+          >
+            <ClockIcon />
+            {formatWindow(day.burn_window)}
+            <span className="text-sm font-medium">
+              · {day.burn_window.hours}h
+            </span>
           </span>
         ) : (
-          <span className="text-sm text-slate-500">No workable window</span>
+          <span className="text-sm font-medium text-slate-500">
+            No workable window
+          </span>
+        )}
+
+        {/* Why you can't, if you can't. The answer to "why not today?" */}
+        {blocked ? (
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-red-700">
+            {day.blocking_factors.map((factor) => {
+              const Icon = PARAMETER_ICONS[factor];
+              return (
+                <span key={factor} className="flex items-center gap-1">
+                  {Icon && <Icon />}
+                  {FACTOR_LABELS[factor] || factor}
+                </span>
+              );
+            })}
+          </span>
+        ) : (
+          <span className="text-xs text-slate-500">
+            All parameters within range
+          </span>
         )}
 
         {day.partial_day && (
-          <span className="text-xs text-slate-500 italic">
+          <span className="text-xs italic text-slate-500">
             Partial day — only part of today's burn window remains
           </span>
         )}
@@ -136,6 +181,7 @@ export default function DayCard({ day }) {
           </p>
           {PARAMETERS.map((parameter) => {
             const threshold = day.thresholds[parameter.key];
+            const Icon = PARAMETER_ICONS[parameter.key];
             return (
               <div
                 key={parameter.key}
@@ -144,7 +190,10 @@ export default function DayCard({ day }) {
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium">{parameter.label}</span>
+                  <span className="flex items-center gap-1.5 font-medium">
+                    {Icon && <Icon />}
+                    {parameter.label}
+                  </span>
                   <span>{parameter.format(day.conditions)}</span>
                 </div>
                 <p className="mt-1 text-xs opacity-80">{threshold.detail}</p>

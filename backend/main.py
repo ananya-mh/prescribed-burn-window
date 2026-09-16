@@ -21,7 +21,7 @@ from models.schemas import (
     HealthResponse,
     Location,
 )
-from services import airnow
+from services import aqi
 from services.area_scan import get_burn_areas
 from services.nws import NWSError, fetch_daily_forecast
 
@@ -68,7 +68,7 @@ async def burn_window(
         try:
             weather_days, aqi_by_date = await asyncio.gather(
                 fetch_daily_forecast(client, lat, lon),
-                airnow.fetch_daily_aqi(client, lat, lon),
+                aqi.fetch_daily_aqi(client, lat, lon),
             )
         except NWSError as exc:
             # Weather is required; without it there is nothing to assess.

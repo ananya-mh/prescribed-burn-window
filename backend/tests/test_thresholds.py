@@ -13,6 +13,7 @@ from core.thresholds import (
     WIND_MAX_MPH,
     WIND_MIN_MPH,
     assess_day,
+    evaluate_air_quality,
 )
 from models.schemas import DayConditions, Range
 
@@ -148,7 +149,7 @@ def test_missing_aqi_is_unknown_marginal_and_never_blocking():
     assert verdict.blocking_factors == []
     assert (
         verdict.thresholds["air_quality"].detail
-        == "no AirNow data for this location/date"
+        == "no air quality forecast for this location/date"
     )
 
 
@@ -352,7 +353,12 @@ def test_workable_afternoon_is_not_vetoed_by_a_bad_morning():
 from datetime import date  # noqa: E402
 
 from core.thresholds import assess_days, best_of  # noqa: E402
-from models.schemas import DailyWeather  # noqa: E402
+from models.schemas import AqiReading, DailyWeather  # noqa: E402
+
+
+def _airnow(value):
+    """An AQI reading as the air district would issue it."""
+    return AqiReading(value=value, source="airnow")
 
 
 def _day(day_number, hours):
@@ -364,7 +370,7 @@ def _day(day_number, hours):
 def test_assess_days_maps_aqi_onto_the_right_day():
     weather = [_day(16, [_hour(h) for h in range(9, 17)]),
                _day(17, [_hour(h) for h in range(9, 17)])]
-    days = assess_days(weather, {date(2026, 9, 16): 42})
+    days = assess_days(weather, {date(2026, 9, 16): _airnow(42)})
     assert days[0].conditions.aqi == 42
     assert days[0].status == "GO"
     # No AirNow entry for the 17th, so it is unknown and capped at MARGINAL.
@@ -387,7 +393,8 @@ def test_best_of_prefers_go_over_a_longer_marginal_window():
         _day(16, [_hour(h, humidity=52.0) for h in range(9, 17)]),  # 8h, marginal
         _day(17, [_hour(h) for h in range(9, 14)]),                 # 5h, clean
     ]
-    days = assess_days(weather, {date(2026, 9, 16): 42, date(2026, 9, 17): 42})
+    days = assess_days(weather, {date(2026, 9, 16): _airnow(42),
+                                 date(2026, 9, 17): _airnow(42)})
     assert (days[0].status, days[1].status) == ("MARGINAL", "GO")
     # A shorter GO still outranks a longer MARGINAL.
     assert best_of(days) == ("GO", 5)
@@ -396,9 +403,36 @@ def test_best_of_prefers_go_over_a_longer_marginal_window():
 def test_best_of_breaks_ties_on_window_length():
     weather = [_day(16, [_hour(h) for h in range(9, 13)]),   # 4h
                _day(17, [_hour(h) for h in range(9, 17)])]   # 8h
-    days = assess_days(weather, {date(2026, 9, 16): 42, date(2026, 9, 17): 42})
+    days = assess_days(weather, {date(2026, 9, 16): _airnow(42),
+                                 date(2026, 9, 17): _airnow(42)})
     assert best_of(days) == ("GO", 8)
 
 
 def test_best_of_handles_an_area_with_no_forecast():
     assert best_of([]) == ("NO-GO", 0)
+
+
+def test_modeled_aqi_is_flagged_as_not_agency_issued():
+    """A modelled number must never read like an air district forecast, since
+    it is not what a burn permit is judged against."""
+    official = evaluate_air_quality(42, "airnow")
+    modeled = evaluate_air_quality(42, "modeled")
+    assert official.status == "ok"
+    assert official.detail == "AQI 42, below 100 limit"
+    assert modeled.status == "ok"
+    assert modeled.detail == "AQI 42, below 100 limit (modeled, not agency-issued)"
+
+
+def test_modeled_aqi_still_blocks_when_over_the_limit():
+    assessment = evaluate_air_quality(130, "modeled")
+    assert assessment.status == "blocking"
+    assert "130" in assessment.detail
+
+
+def test_modeled_aqi_lets_a_day_reach_go():
+    """The whole point of the fallback: wildland zones AirNow does not cover
+    should be able to reach GO instead of being capped at MARGINAL."""
+    weather = [_day(16, [_hour(h) for h in range(9, 17)])]
+    days = assess_days(weather, {date(2026, 9, 16): AqiReading(value=48, source="modeled")})
+    assert days[0].status == "GO"
+    assert days[0].conditions.aqi_source == "modeled"

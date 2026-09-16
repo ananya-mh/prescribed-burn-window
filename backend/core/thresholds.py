@@ -11,6 +11,7 @@ from typing import Dict, List, NamedTuple, Optional, Tuple
 from datetime import date as date_type
 
 from models.schemas import (
+    AqiReading,
     BurnWindow,
     DailyWeather,
     DayAssessment,
@@ -184,21 +185,34 @@ def evaluate_precipitation(precip_pct: float) -> ParameterAssessment:
     )
 
 
-def evaluate_air_quality(aqi: Optional[int]) -> ParameterAssessment:
-    """AirNow has no coverage in much of rural California, so a missing AQI is
-    a normal outcome, not an error. Unknown never blocks a day, but it does cap
-    it at MARGINAL so the user knows to check with their air district."""
+def evaluate_air_quality(
+    aqi: Optional[int], source: Optional[str] = None
+) -> ParameterAssessment:
+    """Neither source covers everywhere, so a missing AQI is a normal outcome,
+    not an error. Unknown never blocks a day, but it does cap it at MARGINAL so
+    the user knows to check with their air district.
+
+    A modelled number is flagged in the detail text: it is informative, but it
+    is not what an air district issues a burn permit against.
+    """
     if aqi is None:
         return ParameterAssessment(
             status=UNKNOWN,
-            detail="no AirNow data for this location/date",
+            detail="no air quality forecast for this location/date",
         )
-    return evaluate_max(
+
+    assessment = evaluate_max(
         aqi,
         AQI_MAX,
         "AQI {0}".format(_fmt(aqi)),
         _fmt(AQI_MAX),
     )
+    if source == "modeled":
+        return ParameterAssessment(
+            status=assessment.status,
+            detail=assessment.detail + " (modeled, not agency-issued)",
+        )
+    return assessment
 
 
 def hour_is_within_window(hour: HourWeather) -> bool:
@@ -237,7 +251,11 @@ def find_longest_burn_window(hours: List[HourWeather]) -> List[HourWeather]:
     return best
 
 
-def summarize_hours(hours: List[HourWeather], aqi: Optional[int]) -> DayConditions:
+def summarize_hours(
+    hours: List[HourWeather],
+    aqi: Optional[int],
+    aqi_source: Optional[str] = None,
+) -> DayConditions:
     """Collapse a run of hours into the conditions to report and judge."""
     return DayConditions(
         wind_speed_mph=Range(
@@ -250,6 +268,7 @@ def summarize_hours(hours: List[HourWeather], aqi: Optional[int]) -> DayConditio
         temp_max_f=max(h.temp_f for h in hours),
         precip_prob_pct=max(h.precip_prob_pct for h in hours),
         aqi=aqi,
+        aqi_source=aqi_source,
     )
 
 
@@ -276,7 +295,7 @@ def assess_day(
         ),
         "temperature": evaluate_temperature(conditions.temp_max_f),
         "precipitation": evaluate_precipitation(conditions.precip_prob_pct),
-        "air_quality": evaluate_air_quality(conditions.aqi),
+        "air_quality": evaluate_air_quality(conditions.aqi, conditions.aqi_source),
     }
 
     # Fixed, human-meaningful order so blocking_factors reads the same way
@@ -312,7 +331,7 @@ def assess_day(
 
 def assess_days(
     weather_days: List[DailyWeather],
-    aqi_by_date: Dict[date_type, Optional[int]],
+    aqi_by_date: Dict[date_type, AqiReading],
 ) -> List[DayAssessment]:
     """Turn a location's forecast into one assessment per day.
 
@@ -322,12 +341,14 @@ def assess_days(
     assessments = []
 
     for weather in weather_days:
-        aqi = aqi_by_date.get(weather.date)
+        reading = aqi_by_date.get(weather.date)
+        aqi = reading.value if reading else None
+        source = reading.source if reading else None
         window = find_longest_burn_window(weather.hours)
 
         if len(window) >= MIN_BURN_HOURS:
             # Judge the day on the window a crew would actually burn in.
-            conditions = summarize_hours(window, aqi)
+            conditions = summarize_hours(window, aqi, source)
             burn_window = BurnWindow(
                 start_hour=window[0].hour,
                 end_hour=window[-1].hour + 1,
@@ -336,7 +357,7 @@ def assess_days(
         else:
             # No workable window, so report the whole day to show what ruled it
             # out rather than the handful of hours that happened to pass.
-            conditions = summarize_hours(weather.hours, aqi)
+            conditions = summarize_hours(weather.hours, aqi, source)
             burn_window = None
 
         verdict = assess_day(conditions, window_hours=len(window))

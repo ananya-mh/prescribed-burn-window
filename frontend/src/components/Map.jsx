@@ -28,14 +28,22 @@ const defaultIcon = L.icon({
 });
 
 // Leaflet path colours, not Tailwind classes, so these are plain hex values.
+// They match the badge colours so the map and the list read as one scale.
 const AREA_COLORS = {
   "GO": "#16a34a",
   "MARGINAL": "#ca8a04",
   "NO-GO": "#dc2626",
 };
 
+const LEGEND = [
+  { status: "GO", label: "GO — burn window available" },
+  { status: "MARGINAL", label: "MARGINAL — close to a limit" },
+  { status: "NO-GO", label: "NO-GO — outside limits" },
+];
+
 const CALIFORNIA_CENTER = [37.5, -119.5];
 const CALIFORNIA_ZOOM = 6;
+const ZONE_ZOOM = 9;
 
 // Listens for clicks on the map and reports the clicked coordinates upward.
 function ClickHandler({ onSelect }) {
@@ -63,46 +71,94 @@ function ResizeHandler() {
   return null;
 }
 
-export default function Map({ location, onSelect, areas = [] }) {
+// Flies to a zone picked from the list. `focus.id` changes on every pick, so
+// choosing the same zone twice still moves the map.
+function FocusHandler({ focus }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (focus) {
+      map.flyTo([focus.lat, focus.lon], ZONE_ZOOM, { duration: 0.8 });
+    }
+  }, [map, focus]);
+
+  return null;
+}
+
+function Legend() {
   return (
-    <MapContainer
-      center={CALIFORNIA_CENTER}
-      zoom={CALIFORNIA_ZOOM}
-      scrollWheelZoom={true}
-      className="h-full w-full"
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <ResizeHandler />
-      <ClickHandler onSelect={onSelect} />
+    <div className="absolute bottom-3 left-3 z-[1000] rounded-md border border-slate-200 bg-white/95 px-3 py-2 shadow-md">
+      <p className="mb-1 text-xs font-semibold text-slate-700">
+        Fire weather zones
+      </p>
+      <ul className="flex flex-col gap-1">
+        {LEGEND.map((entry) => (
+          <li
+            key={entry.status}
+            className="flex items-center gap-2 text-xs text-slate-600"
+          >
+            <span
+              className="inline-block h-3 w-3 shrink-0 rounded-full border border-white shadow-sm"
+              style={{ backgroundColor: AREA_COLORS[entry.status] }}
+            />
+            {entry.label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
-      {areas.map((area) => (
-        <CircleMarker
-          key={area.name}
-          center={[area.location.lat, area.location.lon]}
-          radius={6}
-          pathOptions={{
-            color: "#ffffff",
-            weight: 1.5,
-            fillColor: AREA_COLORS[area.best_status] || "#64748b",
-            fillOpacity: 0.9,
-          }}
-          eventHandlers={{
-            click: () => onSelect(area.location.lat, area.location.lon, area.name),
-          }}
-        >
-          <Tooltip>
-            {area.name} - {area.best_status}
-            {area.best_window_hours > 0 && ` (${area.best_window_hours}h)`}
-          </Tooltip>
-        </CircleMarker>
-      ))}
+export default function Map({ location, onSelect, areas = [], focus }) {
+  return (
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={CALIFORNIA_CENTER}
+        zoom={CALIFORNIA_ZOOM}
+        scrollWheelZoom={true}
+        className="h-full w-full"
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <ResizeHandler />
+        <FocusHandler focus={focus} />
+        <ClickHandler onSelect={onSelect} />
 
-      {location && (
-        <Marker position={[location.lat, location.lon]} icon={defaultIcon} />
-      )}
-    </MapContainer>
+        {areas.map((area) => (
+          <CircleMarker
+            key={area.zone_id || area.name}
+            center={[area.location.lat, area.location.lon]}
+            radius={6}
+            pathOptions={{
+              color: "#ffffff",
+              weight: 1.5,
+              fillColor: AREA_COLORS[area.best_status] || "#64748b",
+              fillOpacity: 0.9,
+            }}
+            eventHandlers={{
+              click: (event) => {
+                // Without this the map's own click handler also fires and
+                // re-selects the bare coordinates, dropping the zone name.
+                L.DomEvent.stopPropagation(event);
+                onSelect(area.location.lat, area.location.lon, area.name);
+              },
+            }}
+          >
+            <Tooltip>
+              {area.name} - {area.best_status}
+              {area.best_window_hours > 0 && ` (${area.best_window_hours}h)`}
+            </Tooltip>
+          </CircleMarker>
+        ))}
+
+        {location && (
+          <Marker position={[location.lat, location.lon]} icon={defaultIcon} />
+        )}
+      </MapContainer>
+
+      <Legend />
+    </div>
   );
 }

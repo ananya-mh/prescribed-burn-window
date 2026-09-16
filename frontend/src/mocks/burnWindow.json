@@ -1,9 +1,9 @@
 {
   "location": {
-    "lat": 40.42,
-    "lon": -120.65
+    "lat": 38.706,
+    "lon": -120.3297
   },
-  "generated_at": "2026-09-16T03:30:00Z",
+  "generated_at": "2026-09-16T13:30:00Z",
   "days": [
     {
       "date": "2026-09-16",
@@ -20,7 +20,8 @@
         },
         "temp_max_f": 75.0,
         "precip_prob_pct": 0.0,
-        "aqi": 42
+        "aqi": 42,
+        "aqi_source": "airnow"
       },
       "thresholds": {
         "wind": {
@@ -53,6 +54,53 @@
     },
     {
       "date": "2026-09-17",
+      "status": "GO",
+      "blocking_factors": [],
+      "conditions": {
+        "wind_speed_mph": {
+          "min": 8.0,
+          "max": 8.0
+        },
+        "humidity_pct": {
+          "min": 40.0,
+          "max": 40.0
+        },
+        "temp_max_f": 75.0,
+        "precip_prob_pct": 0.0,
+        "aqi": 48,
+        "aqi_source": "modeled"
+      },
+      "thresholds": {
+        "wind": {
+          "status": "ok",
+          "detail": "8-8 mph, within 3-15 range"
+        },
+        "humidity": {
+          "status": "ok",
+          "detail": "40-40%, within 25-55 range"
+        },
+        "temperature": {
+          "status": "ok",
+          "detail": "75\u00b0F, below 90\u00b0F limit"
+        },
+        "precipitation": {
+          "status": "ok",
+          "detail": "0% chance, below 30% limit"
+        },
+        "air_quality": {
+          "status": "ok",
+          "detail": "AQI 48, below 100 limit (modeled, not agency-issued)"
+        }
+      },
+      "burn_window": {
+        "start_hour": 9,
+        "end_hour": 17,
+        "hours": 8
+      },
+      "partial_day": false
+    },
+    {
+      "date": "2026-09-18",
       "status": "MARGINAL",
       "blocking_factors": [],
       "conditions": {
@@ -66,7 +114,8 @@
         },
         "temp_max_f": 75.0,
         "precip_prob_pct": 0.0,
-        "aqi": null
+        "aqi": null,
+        "aqi_source": null
       },
       "thresholds": {
         "wind": {
@@ -87,7 +136,7 @@
         },
         "air_quality": {
           "status": "unknown",
-          "detail": "no AirNow data for this location/date"
+          "detail": "no air quality forecast for this location/date"
         }
       },
       "burn_window": {
@@ -98,7 +147,7 @@
       "partial_day": false
     },
     {
-      "date": "2026-09-18",
+      "date": "2026-09-19",
       "status": "NO-GO",
       "blocking_factors": [
         "wind"
@@ -114,7 +163,8 @@
         },
         "temp_max_f": 75.0,
         "precip_prob_pct": 0.0,
-        "aqi": 38
+        "aqi": 38,
+        "aqi_source": "airnow"
       },
       "thresholds": {
         "wind": {
@@ -142,7 +192,7 @@
       "partial_day": false
     },
     {
-      "date": "2026-09-19",
+      "date": "2026-09-20",
       "status": "NO-GO",
       "blocking_factors": [
         "wind",
@@ -162,7 +212,8 @@
         },
         "temp_max_f": 94.0,
         "precip_prob_pct": 70.0,
-        "aqi": 120
+        "aqi": 120,
+        "aqi_source": "modeled"
       },
       "thresholds": {
         "wind": {
@@ -183,55 +234,11 @@
         },
         "air_quality": {
           "status": "blocking",
-          "detail": "AQI 120, exceeds 100 limit"
+          "detail": "AQI 120, exceeds 100 limit (modeled, not agency-issued)"
         }
       },
       "burn_window": null,
       "partial_day": false
-    },
-    {
-      "date": "2026-09-20",
-      "status": "NO-GO",
-      "blocking_factors": [
-        "burn_window"
-      ],
-      "conditions": {
-        "wind_speed_mph": {
-          "min": 8.0,
-          "max": 8.0
-        },
-        "humidity_pct": {
-          "min": 40.0,
-          "max": 40.0
-        },
-        "temp_max_f": 75.0,
-        "precip_prob_pct": 0.0,
-        "aqi": 47
-      },
-      "thresholds": {
-        "wind": {
-          "status": "ok",
-          "detail": "8-8 mph, within 3-15 range"
-        },
-        "humidity": {
-          "status": "ok",
-          "detail": "40-40%, within 25-55 range"
-        },
-        "temperature": {
-          "status": "ok",
-          "detail": "75\u00b0F, below 90\u00b0F limit"
-        },
-        "precipitation": {
-          "status": "ok",
-          "detail": "0% chance, below 30% limit"
-        },
-        "air_quality": {
-          "status": "ok",
-          "detail": "AQI 47, below 100 limit"
-        }
-      },
-      "burn_window": null,
-      "partial_day": true
     }
   ]
 }

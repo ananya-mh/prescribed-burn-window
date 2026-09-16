@@ -32,9 +32,12 @@ window, either because a parameter is out of range or because the good hours don
 enough. **MARGINAL** = a workable window, but at least one parameter sits within 10% of a
 boundary (or air quality is unknown).
 
-Air quality can be **unknown**: AirNow has no reporting area across much of rural Northern
-California. Unknown never blocks a day, but it does cap it at MARGINAL so you know to check
-the air district yourself.
+Air quality comes from two sources. **AirNow** is the air district's own forecast and is what a
+burn permit is judged against, so it always wins — but its reporting areas track population
+centres, so across California's wildland fire zones it covers only about 5% of day-values.
+**Open-Meteo** fills the rest with a keyless modelled AQI, labelled `modeled` in the response and
+`(modeled, not agency-issued)` in the detail text. If neither has data the day reads **unknown**,
+which never blocks a day but does cap it at MARGINAL.
 
 ## Running it
 
@@ -77,3 +80,5 @@ cd backend && .venv/bin/python -m pytest tests -v
 - **AirNow** (`www.airnowapi.org`) — free key. Uses `/aq/forecast/current/`; the older
   `/aq/forecast/latLong/` was retired 2026-09-30. Responses are cached for an hour because
   AirNow allows only 500 requests/hour/key.
+- **Open-Meteo** (`air-quality-api.open-meteo.com`) — no key. Modelled US AQI, used only where
+  AirNow has no reporting area, which is most wildland. Always labelled as modelled.

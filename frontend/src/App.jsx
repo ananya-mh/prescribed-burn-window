@@ -14,6 +14,9 @@ export default function App() {
   const [areasLoading, setAreasLoading] = useState(true);
   const [areasError, setAreasError] = useState(null);
   const [selectedName, setSelectedName] = useState(null);
+  // Set only when the pick came from the list, so the map flies to it. The id
+  // changes every time so picking the same zone twice still moves the map.
+  const [focus, setFocus] = useState(null);
 
   // The ranked area list is the same for everyone and is cached server-side,
   // so fetch it once when the page loads.
@@ -24,8 +27,11 @@ export default function App() {
       .finally(() => setAreasLoading(false));
   }, []);
 
-  async function handleSelect(lat, lon, name = null) {
+  async function handleSelect(lat, lon, name = null, focusMap = false) {
     setSelectedName(name);
+    if (focusMap) {
+      setFocus((previous) => ({ lat, lon, id: (previous?.id || 0) + 1 }));
+    }
     setLocation({ lat, lon });
     setResult(null);
     setError(null);
@@ -58,6 +64,7 @@ export default function App() {
               location={location}
               onSelect={handleSelect}
               areas={areas || []}
+              focus={focus}
             />
           </div>
 
