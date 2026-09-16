@@ -38,4 +38,10 @@ FORECAST_DAYS = 5
 CA_LAT_MIN, CA_LAT_MAX = 32.5, 42.1
 CA_LON_MIN, CA_LON_MAX = -124.5, -114.1
 
-CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+# The local dev server, plus whatever the deployment sets. The frontend is on a
+# different origin in production, so its URL arrives as configuration rather
+# than a code change: CORS_ORIGINS="https://foo.vercel.app,https://bar.app"
+_EXTRA_ORIGINS = os.environ.get("CORS_ORIGINS", "")
+CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"] + [
+    origin.strip() for origin in _EXTRA_ORIGINS.split(",") if origin.strip()
+]

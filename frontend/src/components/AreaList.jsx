@@ -21,7 +21,19 @@ export default function AreaList({
     if (row) row.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [selectedName]);
 
-  if (loading) return <p className="text-sm text-slate-600">Loading areas...</p>;
+  if (loading) {
+    // The backend sleeps when idle on the free tier, and a cold start also
+    // means an empty cache, so the first load really can take this long.
+    return (
+      <div className="text-sm text-slate-600">
+        <p>Loading zones...</p>
+        <p className="mt-1 text-xs text-slate-500">
+          The backend sleeps when idle, so the first load can take up to a
+          minute.
+        </p>
+      </div>
+    );
+  }
 
   if (error) {
     return (

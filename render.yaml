@@ -1,0 +1,41 @@
+# Render Blueprint for the backend. The frontend is a static Vite build and is
+# deployed separately on Vercel, so it is deliberately not described here.
+#
+# This file is documentation as much as configuration: it records how the
+# service is meant to run, in the repo, where it can be reviewed.
+
+services:
+  - type: web
+    name: burn-window-api
+    runtime: python
+    plan: free
+    region: oregon
+    # Imports are absolute from the backend package root (`from core import
+    # config`), so the process must start inside backend/. Build and start
+    # commands are resolved relative to this.
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # No --workers on purpose. Uvicorn runs a single process by default, and
+    # that is required for correctness here: the TTL caches in
+    # services/airnow.py, services/openmeteo.py and services/area_scan.py are
+    # module-level dicts, and area_scan's asyncio.Lock herd guard is
+    # per-event-loop. A second worker would mean a second cache and a second
+    # concurrent 30-zone scan, doubling calls against AirNow's hard
+    # 500 requests/hour/key cap. Do not add workers or replicas without first
+    # moving that state somewhere shared.
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      # Render's default is now 3.14.3, which is newer than anything this
+      # dependency set has been tested against. Pin it explicitly so a change
+      # to that default cannot break a deploy. Must be fully qualified.
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      # Prompted for on first deploy, never stored in git.
+      - key: AIRNOW_API_KEY
+        sync: false
+      # The Vercel URL, which does not exist until the frontend is deployed.
+      # Comma-separated; localhost origins are always allowed (core/config.py).
+      - key: CORS_ORIGINS
+        sync: false

@@ -93,7 +93,7 @@ export default function App() {
             </p>
           )}
 
-          {loading && <p className="text-sm text-slate-600">Loading...</p>}
+          {loading && <p className="text-sm text-slate-600">Loading…</p>}
 
           {error && (
             <p className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">

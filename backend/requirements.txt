@@ -1,4 +1,6 @@
-# Pinned to the newest releases that still support Python 3.9.
+# Pinned to the newest releases that still support Python 3.9, which is what is
+# installed locally. They also run on newer Pythons, so production pins 3.11 via
+# PYTHON_VERSION in render.yaml rather than inheriting Render's 3.14 default.
 fastapi==0.128.8
 uvicorn==0.39.0
 httpx==0.28.1

@@ -64,6 +64,27 @@ npm run dev
 cd backend && .venv/bin/python -m pytest tests -v
 ```
 
+## Deploying
+
+Backend on **Render**, frontend on **Vercel**. No Docker: both platforms build from source, and
+Render does not auto-detect a Dockerfile anyway.
+
+Deploy the backend first — the two reference each other's URLs.
+
+1. **Render** — New → Blueprint, point it at this repo. `render.yaml` supplies the root
+   directory, commands, Python version and health check. It will prompt for `AIRNOW_API_KEY`
+   (leave `CORS_ORIGINS` blank for now). Note the service URL.
+2. **Vercel** — import the repo, set **Root Directory** to `frontend`. The Vite preset handles
+   the rest. Set `VITE_API_BASE_URL` to the Render URL.
+   `VITE_*` vars are baked in at build time, so changing this later needs a redeploy, not a restart.
+3. **Back on Render** — set `CORS_ORIGINS` to the Vercel URL and redeploy.
+
+**First load is slow.** Render's free tier spins a service down after 15 minutes idle and takes
+about a minute to wake. A cold start also means empty caches, so the first `/api/burn-areas`
+re-runs the full zone scan. The UI says so rather than looking broken. The 1-hour cache TTLs
+therefore rarely reach expiry on a low-traffic site — worst case that is roughly 120 AirNow
+requests an hour, comfortably under the 500/hour cap.
+
 ## Endpoints
 
 - `GET /api/burn-window?lat=&lon=` — 5-day assessment for a California point
