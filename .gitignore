@@ -1,0 +1,13 @@
+phase1_scope.md
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Node
+node_modules/
+dist/
+
+CLAUDE.md

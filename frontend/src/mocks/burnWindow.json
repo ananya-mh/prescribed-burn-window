@@ -1,0 +1,237 @@
+{
+  "location": {
+    "lat": 40.42,
+    "lon": -120.65
+  },
+  "generated_at": "2026-09-16T03:30:00Z",
+  "days": [
+    {
+      "date": "2026-09-16",
+      "status": "GO",
+      "blocking_factors": [],
+      "conditions": {
+        "wind_speed_mph": {
+          "min": 8.0,
+          "max": 8.0
+        },
+        "humidity_pct": {
+          "min": 40.0,
+          "max": 40.0
+        },
+        "temp_max_f": 75.0,
+        "precip_prob_pct": 0.0,
+        "aqi": 42
+      },
+      "thresholds": {
+        "wind": {
+          "status": "ok",
+          "detail": "8-8 mph, within 3-15 range"
+        },
+        "humidity": {
+          "status": "ok",
+          "detail": "40-40%, within 25-55 range"
+        },
+        "temperature": {
+          "status": "ok",
+          "detail": "75\u00b0F, below 90\u00b0F limit"
+        },
+        "precipitation": {
+          "status": "ok",
+          "detail": "0% chance, below 30% limit"
+        },
+        "air_quality": {
+          "status": "ok",
+          "detail": "AQI 42, below 100 limit"
+        }
+      },
+      "burn_window": {
+        "start_hour": 9,
+        "end_hour": 17,
+        "hours": 8
+      },
+      "partial_day": false
+    },
+    {
+      "date": "2026-09-17",
+      "status": "MARGINAL",
+      "blocking_factors": [],
+      "conditions": {
+        "wind_speed_mph": {
+          "min": 8.0,
+          "max": 8.0
+        },
+        "humidity_pct": {
+          "min": 52.0,
+          "max": 52.0
+        },
+        "temp_max_f": 75.0,
+        "precip_prob_pct": 0.0,
+        "aqi": null
+      },
+      "thresholds": {
+        "wind": {
+          "status": "ok",
+          "detail": "8-8 mph, within 3-15 range"
+        },
+        "humidity": {
+          "status": "marginal",
+          "detail": "52-52%, close to 55% limit"
+        },
+        "temperature": {
+          "status": "ok",
+          "detail": "75\u00b0F, below 90\u00b0F limit"
+        },
+        "precipitation": {
+          "status": "ok",
+          "detail": "0% chance, below 30% limit"
+        },
+        "air_quality": {
+          "status": "unknown",
+          "detail": "no AirNow data for this location/date"
+        }
+      },
+      "burn_window": {
+        "start_hour": 12,
+        "end_hour": 17,
+        "hours": 5
+      },
+      "partial_day": false
+    },
+    {
+      "date": "2026-09-18",
+      "status": "NO-GO",
+      "blocking_factors": [
+        "wind"
+      ],
+      "conditions": {
+        "wind_speed_mph": {
+          "min": 22.0,
+          "max": 22.0
+        },
+        "humidity_pct": {
+          "min": 40.0,
+          "max": 40.0
+        },
+        "temp_max_f": 75.0,
+        "precip_prob_pct": 0.0,
+        "aqi": 38
+      },
+      "thresholds": {
+        "wind": {
+          "status": "blocking",
+          "detail": "22-22 mph, exceeds 15 mph limit"
+        },
+        "humidity": {
+          "status": "ok",
+          "detail": "40-40%, within 25-55 range"
+        },
+        "temperature": {
+          "status": "ok",
+          "detail": "75\u00b0F, below 90\u00b0F limit"
+        },
+        "precipitation": {
+          "status": "ok",
+          "detail": "0% chance, below 30% limit"
+        },
+        "air_quality": {
+          "status": "ok",
+          "detail": "AQI 38, below 100 limit"
+        }
+      },
+      "burn_window": null,
+      "partial_day": false
+    },
+    {
+      "date": "2026-09-19",
+      "status": "NO-GO",
+      "blocking_factors": [
+        "wind",
+        "humidity",
+        "temperature",
+        "precipitation",
+        "air_quality"
+      ],
+      "conditions": {
+        "wind_speed_mph": {
+          "min": 1.0,
+          "max": 1.0
+        },
+        "humidity_pct": {
+          "min": 85.0,
+          "max": 85.0
+        },
+        "temp_max_f": 94.0,
+        "precip_prob_pct": 70.0,
+        "aqi": 120
+      },
+      "thresholds": {
+        "wind": {
+          "status": "blocking",
+          "detail": "1-1 mph, below 3 mph minimum"
+        },
+        "humidity": {
+          "status": "blocking",
+          "detail": "85-85%, exceeds 55% limit"
+        },
+        "temperature": {
+          "status": "blocking",
+          "detail": "94\u00b0F, exceeds 90\u00b0F limit"
+        },
+        "precipitation": {
+          "status": "blocking",
+          "detail": "70% chance, exceeds 30% limit"
+        },
+        "air_quality": {
+          "status": "blocking",
+          "detail": "AQI 120, exceeds 100 limit"
+        }
+      },
+      "burn_window": null,
+      "partial_day": false
+    },
+    {
+      "date": "2026-09-20",
+      "status": "NO-GO",
+      "blocking_factors": [
+        "burn_window"
+      ],
+      "conditions": {
+        "wind_speed_mph": {
+          "min": 8.0,
+          "max": 8.0
+        },
+        "humidity_pct": {
+          "min": 40.0,
+          "max": 40.0
+        },
+        "temp_max_f": 75.0,
+        "precip_prob_pct": 0.0,
+        "aqi": 47
+      },
+      "thresholds": {
+        "wind": {
+          "status": "ok",
+          "detail": "8-8 mph, within 3-15 range"
+        },
+        "humidity": {
+          "status": "ok",
+          "detail": "40-40%, within 25-55 range"
+        },
+        "temperature": {
+          "status": "ok",
+          "detail": "75\u00b0F, below 90\u00b0F limit"
+        },
+        "precipitation": {
+          "status": "ok",
+          "detail": "0% chance, below 30% limit"
+        },
+        "air_quality": {
+          "status": "ok",
+          "detail": "AQI 47, below 100 limit"
+        }
+      },
+      "burn_window": null,
+      "partial_day": true
+    }
+  ]
+}
